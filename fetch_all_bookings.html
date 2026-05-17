@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Bookings – Avani Cab Service Nashik</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="header">
+    <div class="header-inner">
+        <a href="index.html" class="logo">
+            <div class="logo-icon">🚖</div>
+            <div class="logo-text">
+                <span class="logo-main">AVANI</span>
+                <span class="logo-sub">CAB SERVICE · NASHIK</span>
+            </div>
+        </a>
+        <nav class="nav">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="add_booking.html" class="nav-link">Book a Cab</a>
+            <a href="fetch_all_bookings.html" class="nav-link active">My Bookings</a>
+            <a href="tel:9665109532" class="nav-cta">📞 9665109532</a>
+        </nav>
+    </div>
+</header>
+
+<div class="table-wrap">
+    <div class="table-inner">
+
+        <div class="table-header-row">
+            <div>
+                <h1 class="page-title">ALL BOOKINGS</h1>
+                <p class="page-subtitle" style="margin-bottom:0">All saved cab bookings</p>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                <button class="load-btn" id="getbookings">⟳ REFRESH</button>
+                <a href="add_booking.html" class="btn-primary">+ NEW BOOKING</a>
+            </div>
+        </div>
+
+        <div class="loading-state" id="loadingState">Loading bookings...</div>
+        <div class="error-msg" id="errorMsg" style="margin-bottom:16px;"></div>
+
+        <table class="bookings-table">
+            <thead>
+                <tr>
+                    <th>Booking ID</th>
+                    <th>Customer Name</th>
+                    <th>Pickup</th>
+                    <th>Destination</th>
+                    <th>Travel Date</th>
+                    <th>Cab Type</th>
+                    <th>Phone</th>
+                    <th>Price (₹)</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="bookingTable"></tbody>
+        </table>
+
+    </div>
+</div>
+
+<footer class="footer">
+    <div class="footer-inner">
+        <div class="footer-logo">🚖 AVANI CAB SERVICE NASHIK</div>
+        <p class="footer-text small">© 2026 Avani Cab Service. All rights reserved.</p>
+    </div>
+</footer>
+
+<!-- ✅ JAVASCRIPT ONLY FOR THIS PAGE -->
+<script>
+    // Paste your AWS API Gateway URL here after deployment.
+    // Leave blank ("") to use local storage for testing.
+    var API_ENDPOINT = "";
+
+    var USE_LOCAL = (API_ENDPOINT === "" || API_ENDPOINT === "PASTE_YOUR_API_GATEWAY_URL_HERE");
+
+    function getLocal() {
+        return JSON.parse(localStorage.getItem("avani_bookings") || "[]");
+    }
+
+    function renderRows(data) {
+        var table   = document.getElementById("bookingTable");
+        var loading = document.getElementById("loadingState");
+        var btn     = document.getElementById("getbookings");
+
+        loading.style.display = "none";
+        btn.disabled    = false;
+        btn.textContent = "⟳ REFRESH";
+        table.innerHTML = "";
+
+        if (!data || data.length === 0) {
+            table.innerHTML =
+                "<tr><td colspan='9'>" +
+                "<div class='empty-state'>" +
+                "<div class='empty-icon'>🚗</div>" +
+                "<p>No bookings yet. <a href='add_booking.html' style='color:var(--gold)'>Add the first booking!</a></p>" +
+                "</div></td></tr>";
+            return;
+        }
+
+        data.forEach(function(b) {
+            var row = table.insertRow();
+            row.innerHTML =
+                "<td><strong style='color:var(--gold)'>" + (b.bookingid   || "—") + "</strong></td>" +
+                "<td>" + (b.name        || "—") + "</td>" +
+                "<td>" + (b.pickup      || "—") + "</td>" +
+                "<td>" + (b.destination || "—") + "</td>" +
+                "<td>" + (b.traveldate  || "—") + "</td>" +
+                "<td>" + (b.cabtype     || "—") + "</td>" +
+                "<td>" + (b.phone       || "—") + "</td>" +
+                "<td><strong>₹" + (b.price || "—") + "</strong></td>" +
+                "<td><span class='status-badge'>Confirmed</span></td>";
+        });
+    }
+
+    function loadBookings() {
+        var loading  = document.getElementById("loadingState");
+        var errorMsg = document.getElementById("errorMsg");
+        var btn      = document.getElementById("getbookings");
+
+        loading.style.display = "block";
+        errorMsg.classList.remove("show");
+        btn.disabled    = true;
+        btn.textContent = "LOADING...";
+
+        document.getElementById("bookingTable").innerHTML = "";
+
+        if (USE_LOCAL) {
+            var data = getLocal();
+            renderRows(data);
+        } else {
+            fetch(API_ENDPOINT)
+            .then(function(r){ return r.json(); })
+            .then(renderRows)
+            .catch(function(err){
+                loading.style.display = "none";
+                btn.disabled    = false;
+                btn.textContent = "⟳ REFRESH";
+                errorMsg.textContent = "❌ Could not load bookings: " + err.message;
+                errorMsg.classList.add("show");
+            });
+        }
+    }
+
+    // Load automatically when page opens
+    document.addEventListener("DOMContentLoaded", loadBookings);
+
+    // Refresh button
+    document.getElementById("getbookings").addEventListener("click", loadBookings);
+</script>
+
+</body>
+</html>
